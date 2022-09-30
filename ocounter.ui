@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Ocounter</class>
+ <widget class="QMainWindow" name="Ocounter">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>622</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Ocounter</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="5" column="5">
+     <widget class="QTextEdit" name="read_log">
+      <property name="maximumSize">
+       <size>
+        <width>200</width>
+        <height>16777215</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="5">
+     <widget class="QPushButton" name="connected">
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+  
+    background-color:  rgb(0, 153, 0);
+    color:  rgb(255, 255, 255);
+
+}</string>
+      </property>
+      <property name="text">
+       <string>Connect</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="5">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPushButton" name="nim">
+        <property name="text">
+         <string>NIM</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="nim_spinBox"/>
+      </item>
+     </layout>
+    </item>
+    <item row="9" column="0">
+     <widget class="QPushButton" name="lof">
+      <property name="text">
+       <string>LOF</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="5">
+     <widget class="QLabel" name="label">
+      <property name="text">
+       <string>Write:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="2">
+     <widget class="QPushButton" name="tm1">
+      <property name="text">
+       <string>TM1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="8" colspan="5">
+     <widget class="QCustomPlot" name="widget" native="true"/>
+    </item>
+    <item row="9" column="1">
+     <widget class="QPushButton" name="vlt">
+      <property name="text">
+       <string>VLT</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="5">
+     <widget class="QTextEdit" name="write_log">
+      <property name="maximumSize">
+       <size>
+        <width>200</width>
+        <height>16777215</height>
+       </size>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="4">
+     <widget class="QPushButton" name="nim1">
+      <property name="text">
+       <string>NIM 1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="5">
+     <widget class="QPushButton" name="info">
+      <property name="text">
+       <string>INFO</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="1">
+     <widget class="QPushButton" name="ver">
+      <property name="text">
+       <string>VER</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="5">
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QPushButton" name="srr">
+        <property name="text">
+         <string>SRR</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="srr_spinBox">
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>10</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="9" column="3">
+     <widget class="QPushButton" name="syn1">
+      <property name="text">
+       <string>SYN1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="5">
+     <widget class="QComboBox" name="portName"/>
+    </item>
+    <item row="8" column="2">
+     <widget class="QPushButton" name="css">
+      <property name="text">
+       <string>CSS</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QPushButton" name="lon">
+      <property name="text">
+       <string>LON</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="5">
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Read:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="4">
+     <widget class="QPushButton" name="syn2">
+      <property name="text">
+       <string>SYN2</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="3">
+     <widget class="QPushButton" name="rst">
+      <property name="text">
+       <string>RST</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
