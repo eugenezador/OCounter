@@ -7,6 +7,7 @@
 #include <QTime>
 #include <qcustomplot.h>
 //#include "objectcounter.h"
+#include "infowindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Ocounter; }
@@ -61,6 +62,7 @@ private slots:
 
 private:
     Ui::Ocounter *ui;
+    InfoWindow *window;
 
     void  keyPressEvent(QKeyEvent *event);
 

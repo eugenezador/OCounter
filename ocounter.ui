@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>622</width>
-    <height>600</height>
+    <width>580</width>
+    <height>392</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,6 +27,12 @@
     </item>
     <item row="1" column="5">
      <widget class="QPushButton" name="connected">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+        <bold>false</bold>
+       </font>
+      </property>
       <property name="styleSheet">
        <string notr="true">QPushButton {
   
@@ -44,18 +50,34 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QPushButton" name="nim">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>NIM</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="nim_spinBox"/>
+       <widget class="QSpinBox" name="nim_spinBox">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>
     <item row="9" column="0">
      <widget class="QPushButton" name="lof">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>LOF</string>
       </property>
@@ -63,6 +85,11 @@
     </item>
     <item row="2" column="5">
      <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>Write:</string>
       </property>
@@ -70,6 +97,11 @@
     </item>
     <item row="9" column="2">
      <widget class="QPushButton" name="tm1">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>TM1</string>
       </property>
@@ -80,6 +112,11 @@
     </item>
     <item row="9" column="1">
      <widget class="QPushButton" name="vlt">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>VLT</string>
       </property>
@@ -97,6 +134,11 @@
     </item>
     <item row="9" column="4">
      <widget class="QPushButton" name="nim1">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>NIM 1</string>
       </property>
@@ -104,6 +146,11 @@
     </item>
     <item row="7" column="5">
      <widget class="QPushButton" name="info">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>INFO</string>
       </property>
@@ -111,6 +158,11 @@
     </item>
     <item row="8" column="1">
      <widget class="QPushButton" name="ver">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>VER</string>
       </property>
@@ -120,6 +172,11 @@
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
        <widget class="QPushButton" name="srr">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>SRR</string>
         </property>
@@ -127,6 +184,11 @@
       </item>
       <item>
        <widget class="QSpinBox" name="srr_spinBox">
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
         <property name="minimum">
          <number>1</number>
         </property>
@@ -139,16 +201,32 @@
     </item>
     <item row="9" column="3">
      <widget class="QPushButton" name="syn1">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>SYN1</string>
       </property>
      </widget>
     </item>
     <item row="0" column="5">
-     <widget class="QComboBox" name="portName"/>
+     <widget class="QComboBox" name="portName">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="8" column="2">
      <widget class="QPushButton" name="css">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>CSS</string>
       </property>
@@ -156,6 +234,11 @@
     </item>
     <item row="8" column="0">
      <widget class="QPushButton" name="lon">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>LON</string>
       </property>
@@ -163,6 +246,11 @@
     </item>
     <item row="4" column="5">
      <widget class="QLabel" name="label_2">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>Read:</string>
       </property>
@@ -170,6 +258,11 @@
     </item>
     <item row="8" column="4">
      <widget class="QPushButton" name="syn2">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>SYN2</string>
       </property>
@@ -177,6 +270,11 @@
     </item>
     <item row="8" column="3">
      <widget class="QPushButton" name="rst">
+      <property name="font">
+       <font>
+        <pointsize>11</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>RST</string>
       </property>

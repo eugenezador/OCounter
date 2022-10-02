@@ -1,5 +1,6 @@
 #include "ocounter.h"
 #include "ui_ocounter.h"
+//#include "infowindow.h"
 
 Ocounter::Ocounter(QWidget *parent)
     : QMainWindow(parent)
@@ -314,5 +315,6 @@ void Ocounter::on_nim1_clicked()
 
 void Ocounter::on_info_clicked()
 {
-
+    window = new InfoWindow(this);
+    window->show();
 }

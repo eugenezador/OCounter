@@ -10,17 +10,20 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    infowindow.cpp \
     main.cpp \
     objectcounter.cpp \
     ocounter.cpp \
     qcustomplot.cpp
 
 HEADERS += \
+    infowindow.h \
     objectcounter.h \
     ocounter.h \
     qcustomplot.h
 
 FORMS += \
+    infowindow.ui \
     ocounter.ui
 
 # Default rules for deployment.
