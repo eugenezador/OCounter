@@ -25,10 +25,14 @@ public:
 
     void parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value);
 
+    void aim_parser(const QByteArray &data, QVector<QVector<double>> &lazer_value);
+
     // Методы графика
     void plot_settings();
 
     void real_plot();
+
+    void plot();
 
     //shared memory
     void create_shared_memory();
@@ -90,11 +94,11 @@ private:
 
     std::map<double, QVector<double>> graph_value;
 
+    QVector<QVector<double>> lazer_value;
+
     QVector<double> q_x, q_y;
 
     QVector<double> values;
-
-    QVector<double> result;
 
     //shared memory
     QSharedMemory share_memory;

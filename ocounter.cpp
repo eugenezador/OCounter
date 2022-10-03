@@ -87,7 +87,6 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
             time = tmp.toDouble();
-            result.append(time);
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
                 tmp[j] = 0;
@@ -102,7 +101,6 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
         if (data[i] == '(' && tmp.size() != 0) {
             flag = 0;
             values.append(tmp.toDouble());
-            result.append(tmp.toDouble());
             k =0;
             for(int j = 0; j < tmp.size(); j++) {
                 tmp[j] = 0;
@@ -117,7 +115,55 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
 
     graph_value[time] = values;
     qDebug() << "parse in: " << graph_value;
-    qDebug() << "result in: " << result;
+}
+
+void Ocounter::aim_parser(const QByteArray &data, QVector<QVector<double> > &lazer_value)
+{
+    QVector<double> value;
+    QString tmp;
+    int k = 0;
+    int flag = 0;
+
+    for(int i = 0; i < data.size() ; i++) {
+
+        if(data[i]  == ',' && i == data.size() - 1) break;
+
+        if(data[i] == 'e') {
+            flag = 1;
+            i++;
+        }
+
+        if (data[i] == ' ' && tmp.size() != 0) {
+            flag = 0;
+            value.push_back(tmp.toDouble());
+            k =0;
+            for(int j = 0; tmp[j] != '\0'; j++) {
+                tmp[j] = 0;
+            }
+        }
+
+        if((data[i] == ':' || data[i] == ',') && tmp.size() != 0) {
+            flag = 1;
+            i++;
+        }
+
+        if (data[i] == '(' && tmp.size() != 0) {
+            flag = 0;
+            value.append(tmp.toDouble());
+            k =0;
+            for(int j = 0; j < tmp.size(); j++) {
+                tmp[j] = 0;
+            }
+        }
+
+        if(flag) {
+            tmp[k] = data[i];
+            k++;
+        }
+    }
+
+    lazer_value.push_back(value);
+    qDebug() << "lazer: " << lazer_value;
 }
 
 void Ocounter::plot_settings()
@@ -170,6 +216,21 @@ void Ocounter::real_plot()
     ui->plot->update();
 }
 
+void Ocounter::plot()
+{
+    for (int i = 0; i < lazer_value.size(); i++) {
+        for (int j = 1; j < lazer_value[i].size(); j++) {
+            ui->plot->graph(0)->addData(lazer_value[i][0], lazer_value[i][j]);
+        }
+
+//        ui->plot->xAxis->setRange(q_x.first(), q_x.last());
+//        ui->plot->yAxis->setRange(q_y.first(), q_y.last());
+    }
+
+    ui->plot->replot();
+    ui->plot->update();
+}
+
 void Ocounter::create_shared_memory()
 {
     if(!share_memory.create(graph_value.size())){
@@ -185,11 +246,11 @@ void Ocounter::create_shared_memory()
 //        }
 //    }
 
-    share_memory.lock();
-    double *dist = (double*)share_memory.data();
-    const double *source = result.data();
-    memcpy(dist, source, result.size() + 1);
-    share_memory.unlock();
+//    share_memory.lock();
+//    double *dist = (double*)share_memory.data();
+//    const double *source = result.data();
+//    memcpy(dist, source, result.size() + 1);
+//    share_memory.unlock();
 }
 
 void Ocounter::read_shared_memory()
@@ -255,8 +316,10 @@ void Ocounter::on_lon_clicked()
 //        key_pressed = false;
 //    }
 
-   parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
-   real_plot();
+   aim_parser("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", lazer_value);
+   aim_parser("#Opt ch1 time104 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),", lazer_value);
+   aim_parser("#Opt ch1 time144 pnts:203.7(1745),", lazer_value);
+   //real_plot();
 }
 
 
