@@ -30,7 +30,7 @@
      <item>
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>Ver - запрос версии устройства
+        <string>Ver - запрос версии устройства (горячая клавиша - 'v')
 </string>
        </property>
       </widget>
@@ -46,7 +46,7 @@
      <item>
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>LON - запуск лазера (при включении по умолчанию выключено)
+        <string>LON - запуск лазера (при включении по умолчанию выключено) (горячая клвиша - 'f2')
 </string>
        </property>
       </widget>
@@ -54,7 +54,7 @@
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>LOF - прекращение работы лазера
+        <string>LOF - прекращение работы лазера (горячая клавиша - 'f3')
 </string>
        </property>
       </widget>
@@ -63,7 +63,7 @@
       <widget class="QLabel" name="label_5">
        <property name="text">
         <string>NIMxx - задание режима работы - количества импульсов, вырабатываемых устройством после получения команды LON,
- в том числе при внешнем запуске (при задании 0 - неограниченная работа с постоянной частотой) )
+ в том числе при внешнем запуске (при задании 0 - неограниченная работа с постоянной частотой) 
 </string>
        </property>
       </widget>
@@ -76,6 +76,7 @@
     - Готовность к работе - отклик CSS_RDY,
     - Работа - отклик CSS_WRK,
     - Невозможность работы - отклик CSS_ERR
+(горячая клавиша - 'f4')
 </string>
        </property>
       </widget>
@@ -85,6 +86,7 @@
        <property name="text">
         <string>VLT - запрос напряжения накопителя.
 Отличие выводимого значения от реального может составлять 5%
+(горячая клавиша - 'f5')
 </string>
        </property>
       </widget>
@@ -92,7 +94,7 @@
      <item>
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>TM1 - запрос реальной температуры, возврящяется в град Цельсия
+        <string>TM1 - запрос реальной температуры, возврящяется в град Цельсия (горячая клавиша - 't')
 </string>
        </property>
       </widget>
@@ -100,7 +102,7 @@
      <item>
       <widget class="QLabel" name="label_9">
        <property name="text">
-        <string>RST - сброс состояния ошибки
+        <string>RST - сброс состояния ошибки (горячая клавиша - 'r')
 </string>
        </property>
       </widget>
@@ -109,8 +111,9 @@
       <widget class="QLabel" name="label_10">
        <property name="text">
         <string>SYN - устновкаисточника запуска лазера (при включении по умолчанию определен внутренний запуск)
-    - SYN1 - работа от внутреннего генератора,
-    - SYN2 - работа от внешних импульсов запуска
+    - SYN1 - работа от внутреннего генератора (горячая клавиша - 'f6'),
+    - SYN2 - работа от внешних импульсов запуска(горячая клавиша - 'f7')
+
 </string>
        </property>
       </widget>

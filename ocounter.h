@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-#include <QTime>
+#include <sys/mman.h>
 #include <qcustomplot.h>
 //#include "objectcounter.h"
 #include "infowindow.h"
@@ -24,6 +24,19 @@ public:
     void serial_port_properties(const QString &text);
 
     void parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value);
+
+    // Методы графика
+    void plot_settings();
+
+    void real_plot();
+
+    //shared memory
+    void create_shared_memory();
+
+    void read_shared_memory();
+
+    void detach_shared_memory();
+
 
 private slots:
 
@@ -68,6 +81,7 @@ private:
 
     bool key_pressed = false;
     bool is_connect = false;
+    bool lazer_on = false;
 
     QByteArray data;
 
@@ -76,6 +90,14 @@ private:
 
     std::map<double, QVector<double>> graph_value;
 
+    QVector<double> q_x, q_y;
+
     QVector<double> values;
+
+    QVector<double> result;
+
+    //shared memory
+    QSharedMemory share_memory;
+
 };
 #endif // OCOUNTER_H

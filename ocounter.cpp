@@ -27,6 +27,11 @@ Ocounter::Ocounter(QWidget *parent)
     serial->setFlowControl(QSerialPort::NoFlowControl);
     connect(ui->portName, &QComboBox::currentTextChanged, this, &Ocounter::serial_port_properties);
     //
+
+    plot_settings();
+
+    //connect();
+
 }
 
 Ocounter::~Ocounter()
@@ -71,28 +76,33 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
     int flag = 0;
 
     for(int i = 0; i < data.size() ; i++) {
+
+        if(data[i]  == ',' && i == data.size() - 1) break;
+
         if(data[i] == 'e') {
             flag = 1;
             i++;
         }
 
-        if (data[i] == ' ') {
+        if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
             time = tmp.toDouble();
+            result.append(time);
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
                 tmp[j] = 0;
             }
         }
 
-        if(data[i] == ':' || data[i] == ',') {
+        if((data[i] == ':' || data[i] == ',') && tmp.size() != 0) {
             flag = 1;
             i++;
         }
 
-        if (data[i] == '(') {
+        if (data[i] == '(' && tmp.size() != 0) {
             flag = 0;
             values.append(tmp.toDouble());
+            result.append(tmp.toDouble());
             k =0;
             for(int j = 0; j < tmp.size(); j++) {
                 tmp[j] = 0;
@@ -107,7 +117,94 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
 
     graph_value[time] = values;
     qDebug() << "parse in: " << graph_value;
+    qDebug() << "result in: " << result;
 }
+
+void Ocounter::plot_settings()
+{
+    ui->plot->setInteraction(QCP::iRangeDrag, true);// взаимодействие удаления/приближения графика
+    ui->plot->setInteraction(QCP::iRangeZoom, true);// взвимодействие перетаскивания графика
+
+    ui->plot->addGraph();
+    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
+    ui->plot->graph(0)->setLineStyle(QCPGraph::lsNone);
+
+    ui->plot->xAxis->setLabel("t");
+    ui->plot->yAxis->setLabel("L");
+
+
+    double now = QDateTime::currentDateTime().toTime_t();
+    QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
+    dateTicker->setDateTimeFormat("h:m:s");
+    ui->plot->xAxis->setTicker(dateTicker);
+
+    ui->plot->xAxis->setRange(now, now + 100);
+
+}
+
+void Ocounter::real_plot()
+{
+    if( !q_x.empty() && !q_y.empty() )
+        {
+            q_x.clear();
+            q_y.clear();
+        }
+    ui->plot->graph(0)->setData(q_x, q_y);
+
+    ui->plot->replot();
+    ui->plot->update();
+
+    for (const auto& item : graph_value) {
+        q_x.append(item.first);
+        q_y = {};
+        for (const double& point : item.second) {
+            q_y.append(point);
+            ui->plot->graph(0)->addData(q_x.last(), q_y.last());
+        }
+
+        ui->plot->xAxis->setRange(q_x.first(), q_x.last());
+        ui->plot->yAxis->setRange(q_y.first(), q_y.last());
+    }
+
+    ui->plot->replot();
+    ui->plot->update();
+}
+
+void Ocounter::create_shared_memory()
+{
+    if(!share_memory.create(graph_value.size())){
+        qDebug() << "no memory";
+        return;
+    }
+
+//    for (const auto& item : graph_value) {
+
+//        for (const double& point : item.second) {
+//            double *dist = (double*)share_memory.data();
+//            const double *source = item.second.data();
+//        }
+//    }
+
+    share_memory.lock();
+    double *dist = (double*)share_memory.data();
+    const double *source = result.data();
+    memcpy(dist, source, result.size() + 1);
+    share_memory.unlock();
+}
+
+void Ocounter::read_shared_memory()
+{
+
+
+}
+
+void Ocounter::detach_shared_memory()
+{
+    if (!share_memory.detach()) {
+        qDebug() << "can't detach";
+    }
+}
+
 
 void Ocounter::writeData(const QByteArray &data)
 {
@@ -127,8 +224,7 @@ void Ocounter::writeData(const QByteArray &data)
         ui->write_log->append("No Connection");
     }
 }
-// не считывается команда выстрела
-// не отправляются команды
+
 void Ocounter::readData()
 {
     //QByteArray data;
@@ -144,6 +240,7 @@ void Ocounter::readData()
 
     if(strstr(data.constData(),"time") && strstr(data.constData(),"none") == 0) {
         parse(data, graph_value);
+        real_plot();
     }
     if(strstr(data.constData(),"none")) {
         qDebug() << "parse: none";
@@ -153,12 +250,13 @@ void Ocounter::readData()
 
 void Ocounter::on_lon_clicked()
 {
-    if(key_pressed) {
-        writeData("$LON");
-        key_pressed = false;
-    }
+//    if(key_pressed) {
+//        writeData("$LON");
+//        key_pressed = false;
+//    }
 
-//    parse("#Opt ch1 time81497 #pnts:216.4(1815),1560.2(734),6939.0(1218)", graph_value);
+   parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
+   real_plot();
 }
 
 
@@ -248,16 +346,19 @@ void Ocounter::on_srr_clicked()
 void Ocounter::on_nim_clicked()
 {
     if(key_pressed) {
-        data.resize(0);
-        data.resize(5);
-        data[0] = '$';
-        data[1] = 'N';
-        data[2] = 'I';
-        data[3] = 'M';
-        data[4] = ' ';
-        data[5] = ui->nim_spinBox->value();
-        writeData(data);
-        data.resize(0);
+//        data.resize(0);
+//        data.resize(5);
+//        data[0] = '$';
+//        data[1] = 'N';
+//        data[2] = 'I';
+//        data[3] = 'M';
+//        data[4] = ' ';
+//        data[5] = ui->nim_spinBox->value();
+        for(int i = 0; i < ui->nim_spinBox->value(); i++) {
+            writeData("$NIM 1");
+        }
+//        writeData(data);
+//        data.resize(0);
         key_pressed = false;
     }
 }
@@ -272,8 +373,46 @@ void Ocounter::keyPressEvent(QKeyEvent *event)
     }
 
     if(event->key() == Qt::Key_F1) {
-            writeData("$NIM 1");
+        writeData("$NIM 1");
     }
+
+    if(event->key() == Qt::Key_V) {
+        writeData("$VER");
+    }
+
+    if(event->key() == Qt::Key_F2) {
+        writeData("$LON");
+    }
+
+    if(event->key() == Qt::Key_F3) {
+        writeData("$LOF");
+    }
+
+    if(event->key() == Qt::Key_F4) {
+        writeData("$CSS");
+    }
+
+    if(event->key() == Qt::Key_F5) {
+        writeData("$VLT");
+    }
+
+    if(event->key() == Qt::Key_T) {
+        writeData("$TM1");
+    }
+
+    if(event->key() == Qt::Key_R) {
+        writeData("$RST");
+    }
+
+    if(event->key() == Qt::Key_F6) {
+        writeData("$SYN1");
+    }
+
+    if(event->key() == Qt::Key_F7) {
+        writeData("$SYN2");
+    }
+
+
 }
 
 void Ocounter::on_connected_clicked()
