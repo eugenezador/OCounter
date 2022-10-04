@@ -1,3 +1,6 @@
+#include <QFileDialog>
+#include <QBuffer>
+
 #include "ocounter.h"
 #include "ui_ocounter.h"
 //#include "infowindow.h"
@@ -8,7 +11,7 @@ Ocounter::Ocounter(QWidget *parent)
 {
     ui->setupUi(this);
 
-    //com = new ObjectCounter();
+    com = new ObjectCounter();
     serial = new QSerialPort(this);
 
 //чтение доступных портов при запуске
@@ -34,8 +37,6 @@ Ocounter::Ocounter(QWidget *parent)
     qDebug() << "time start " << device_start;
     plot_settings();
 
-    //connect();
-
 }
 
 Ocounter::~Ocounter()
@@ -48,7 +49,7 @@ Ocounter::~Ocounter()
 void Ocounter::serial_port_properties(const QString &text)
 {
     bool currentPortNameChanged = false;
-    qDebug() << __FUNCTION__;
+    //qDebug() << __FUNCTION__;
     if (currentPortName != text) {
         currentPortName = text;
         currentPortNameChanged = true;
@@ -73,6 +74,7 @@ void Ocounter::serial_port_properties(const QString &text)
 
 void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value)
 {
+    result.clear();
     QVector<double> values;
     double time = 0;
     QString tmp;
@@ -91,6 +93,7 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
             time = device_start + tmp.toDouble();
+            result.push_back(tmp.toDouble());
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
                 tmp[j] = 0;
@@ -105,6 +108,7 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
         if (data[i] == '(' && tmp.size() != 0) {
             flag = 0;
             values.append(tmp.toDouble());
+            result.push_back(tmp.toDouble());
             k =0;
             for(int j = 0; j < tmp.size(); j++) {
                 tmp[j] = 0;
@@ -121,62 +125,13 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
     qDebug() << "parse in: " << graph_value;
 }
 
-void Ocounter::aim_parser(const QByteArray &data, QVector<QVector<double> > &lazer_value)
-{
-    QVector<double> value;
-    QString tmp;
-    int k = 0;
-    int flag = 0;
-
-    for(int i = 0; i < data.size() ; i++) {
-
-        if(data[i]  == ',' && i == data.size() - 1) break;
-
-        if(data[i] == 'e') {
-            flag = 1;
-            i++;
-        }
-
-        if (data[i] == ' ' && tmp.size() != 0) {
-            flag = 0;
-            value.push_back(device_start + tmp.toDouble());
-            k =0;
-            for(int j = 0; tmp[j] != '\0'; j++) {
-                tmp[j] = 0;
-            }
-        }
-
-        if((data[i] == ':' || data[i] == ',') && tmp.size() != 0) {
-            flag = 1;
-            i++;
-        }
-
-        if (data[i] == '(' && tmp.size() != 0) {
-            flag = 0;
-            value.append(tmp.toDouble());
-            k =0;
-            for(int j = 0; j < tmp.size(); j++) {
-                tmp[j] = 0;
-            }
-        }
-
-        if(flag) {
-            tmp[k] = data[i];
-            k++;
-        }
-    }
-
-    lazer_value.push_back(value);
-    qDebug() << "lazer: " << lazer_value;
-}
-
 void Ocounter::plot_settings()
 {
     ui->plot->setInteraction(QCP::iRangeDrag, true);// взаимодействие удаления/приближения графика
     ui->plot->setInteraction(QCP::iRangeZoom, true);// взвимодействие перетаскивания графика
 
     ui->plot->addGraph();
-    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::green, Qt::green, 14));
+    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::green, Qt::green, 4));
     ui->plot->graph(0)->setLineStyle(QCPGraph::lsNone);
 
     ui->plot->xAxis->setLabel("t");
@@ -187,47 +142,37 @@ void Ocounter::plot_settings()
     dateTicker->setDateTimeFormat("h:m:s");
     ui->plot->xAxis->setTicker(dateTicker);
 
-    ui->plot->xAxis->setRange(device_start, device_start + 100);
+//    ui->plot->xAxis->setRange(device_start - 100, device_start + 100);
 
 }
 
 void Ocounter::real_plot()
 {
-    if( !q_x.empty() && !q_y.empty() )
-        {
-            q_x.clear();
-            q_y.clear();
-        }
-    ui->plot->graph(0)->setData(q_x, q_y);
+//    if( !q_x.empty() && !q_y.empty() )
+//        {
+//            q_x.clear();
+//            q_y.clear();
+//        }
+//    ui->plot->graph(0)->setData(q_x, q_y);
 
-    ui->plot->replot();
-    ui->plot->update();
+//    ui->plot->replot();
+//    ui->plot->update();
+
 
     for (const auto& item : graph_value) {
         q_x.append(item.first);
-        q_y = {};
         for (const double& point : item.second) {
-            q_y.append(point);
-            ui->plot->graph(0)->addData(q_x.last(), q_y.last());
+            if(point < min_L) {
+                min_L = point;
+            }
+            if(point > max_L) {
+                max_L = point;
+            }
+            ui->plot->graph(0)->addData(item.first, point);
         }
 
         ui->plot->xAxis->setRange(q_x.first() - 4, q_x.last() + 4);
-        ui->plot->yAxis->setRange(q_y.first(), q_y.last());
-    }
-
-    ui->plot->replot();
-    ui->plot->update();
-}
-
-void Ocounter::plot()
-{
-    for (int i = 0; i < lazer_value.size(); i++) {
-        for (int j = 1; j < lazer_value[i].size(); j++) {
-            ui->plot->graph(0)->addData(lazer_value[i][0], lazer_value[i][j]);
-        }
-
-//        ui->plot->xAxis->setRange(q_x.first(), q_x.last());
-//        ui->plot->yAxis->setRange(q_y.first(), q_y.last());
+        ui->plot->yAxis->setRange(min_L - 140, max_L + 140);
     }
 
     ui->plot->replot();
@@ -236,28 +181,48 @@ void Ocounter::plot()
 
 void Ocounter::create_shared_memory()
 {
-//    if(!share_memory.create(lazer_value.size())){
-//        qDebug() << "no memory";
-//        return;
-//    }
+    QBuffer buffer;
+    buffer.open(QBuffer::ReadWrite);
+    QDataStream out(&buffer);
+    out << sh;
+    int size = buffer.size();
 
-//    share_memory.lock();
-//    double *dist = (double*)share_memory.data();
-//    vector_to_array();
-//    const double *source = array.data();
-//    memcpy(dist, source, result.size() + 1);
-//    share_memory.unlock();
+    if (!shared_memory.create(size)) {
+        qDebug() << "Unable to create shared memory segment.";
+        return;
+    }
+    shared_memory.lock();
+    char *to = (char*)shared_memory.data();
+    const char *from = buffer.data().data();
+    memcpy(to, from, qMin(shared_memory.size(), size));
+    shared_memory.unlock();
 }
 
 void Ocounter::read_shared_memory()
 {
+    if (!shared_memory.attach()) {
+        qDebug() << "Unable to get from shared memory segment.";
+        return;
+    }
 
+    QBuffer buffer;
+    QDataStream in(&buffer);
+    //QVector<double> data_from_shared_memory;
+    double data_from_shared_memory;
 
+    shared_memory.lock();
+    buffer.setData((char*)shared_memory.constData(), shared_memory.size());
+    buffer.open(QBuffer::ReadOnly);
+    in >> data_from_shared_memory;
+    qDebug() << "data from shared memory" << data_from_shared_memory;
+    shared_memory.unlock();
+
+    shared_memory.detach();
 }
 
 void Ocounter::detach_shared_memory()
 {
-    if (!share_memory.detach()) {
+    if (!shared_memory.detach()) {
         qDebug() << "can't detach";
     }
 }
@@ -312,23 +277,22 @@ void Ocounter::on_lon_clicked()
 //        key_pressed = false;
 //    }
 
-//   aim_parser("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", lazer_value);
-//   aim_parser("#Opt ch1 time104 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),", lazer_value);
-//   aim_parser("#Opt ch1 time144 pnts:203.7(1745),", lazer_value);
-       parse("#Opt ch1 time104 #pnts:418.14(321)", graph_value);
-       parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
+   parse("#Opt ch1 time104 #pnts:1444.14(321)", graph_value);
+   parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
+   parse("#Opt ch1 time41 #pnts:104.14(321)", graph_value);
+   create_shared_memory();
    real_plot();
 }
 
 
 void Ocounter::on_lof_clicked()
 {
-    if(key_pressed) {
-        writeData("$LOF");
-        key_pressed = false;
-    }
+//    if(key_pressed) {
+//        writeData("$LOF");
+//        key_pressed = false;
+//    }
 
-//    parse("#Opt ch1 time41414 #pnts:418.14(321)", graph_value);
+read_shared_memory();
 }
 
 void Ocounter::on_ver_clicked()

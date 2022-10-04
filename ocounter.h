@@ -4,9 +4,10 @@
 #include <QMainWindow>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-#include <sys/mman.h>
-#include <qcustomplot.h>
-//#include "objectcounter.h"
+#include <QSharedMemory>
+//#include <sys/mman.h>
+#include "qcustomplot.h"
+#include "objectcounter.h"
 #include "infowindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -25,19 +26,10 @@ public:
 
     void parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value);
 
-    void aim_parser(const QByteArray &data, QVector<QVector<double>> &lazer_value);
-
-    void vector_to_array();
-
-    void array_to_vector();
-
-
     // Методы графика
     void plot_settings();
 
     void real_plot();
-
-    void plot();
 
     //shared memory
     void create_shared_memory();
@@ -90,29 +82,34 @@ private:
 
     double device_start = 0;
 
+    double min_L = 99999; // минимальное расстоние до цели (для масштабирования графика)
+    double max_L = 0; // максимальное расстояние до цели (для масштабирования графика)
+
     bool key_pressed = false;
     bool is_connect = false;
     bool lazer_on = false;
 
     QByteArray data;
 
-    //ObjectCounter *com;
+    ObjectCounter *com;
 
     QSerialPort *serial;// указатель на область памяти для экземпляра порта
     QString currentPortName;// для записи предыдущего значения порта
 
+//    контейнер для хранения данных о целях
+//    (время обнаружения - массив расстояний до обнаруженных объектов)
     std::map<double, QVector<double>> graph_value;
 
-    QVector<QVector<double>> lazer_value;
+    QVector<double> result; // массив для записи команды распознавания в распределяемую память
 
-    QVector<double> rezult;
-
-    QVector<double> q_x, q_y;
+    QVector<double> q_x, q_y; // массив для записи коодинат
 
     QVector<double> values;
 
     //shared memory
-    QSharedMemory share_memory;
+    QSharedMemory shared_memory;
+
+    double sh = 144;
 
 };
 #endif // OCOUNTER_H
