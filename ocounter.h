@@ -27,6 +27,11 @@ public:
 
     void aim_parser(const QByteArray &data, QVector<QVector<double>> &lazer_value);
 
+    void vector_to_array();
+
+    void array_to_vector();
+
+
     // Методы графика
     void plot_settings();
 
@@ -83,11 +88,15 @@ private:
 
     void  keyPressEvent(QKeyEvent *event);
 
+    double device_start = 0;
+
     bool key_pressed = false;
     bool is_connect = false;
     bool lazer_on = false;
 
     QByteArray data;
+
+    //ObjectCounter *com;
 
     QSerialPort *serial;// указатель на область памяти для экземпляра порта
     QString currentPortName;// для записи предыдущего значения порта
@@ -95,6 +104,8 @@ private:
     std::map<double, QVector<double>> graph_value;
 
     QVector<QVector<double>> lazer_value;
+
+    QVector<double> rezult;
 
     QVector<double> q_x, q_y;
 

@@ -8,6 +8,7 @@ Ocounter::Ocounter(QWidget *parent)
 {
     ui->setupUi(this);
 
+    //com = new ObjectCounter();
     serial = new QSerialPort(this);
 
 //чтение доступных портов при запуске
@@ -28,6 +29,9 @@ Ocounter::Ocounter(QWidget *parent)
     connect(ui->portName, &QComboBox::currentTextChanged, this, &Ocounter::serial_port_properties);
     //
 
+    device_start = QDateTime::currentDateTime().toTime_t();
+
+    qDebug() << "time start " << device_start;
     plot_settings();
 
     //connect();
@@ -86,7 +90,7 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
 
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
-            time = tmp.toDouble();
+            time = device_start + tmp.toDouble();
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
                 tmp[j] = 0;
@@ -135,7 +139,7 @@ void Ocounter::aim_parser(const QByteArray &data, QVector<QVector<double> > &laz
 
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
-            value.push_back(tmp.toDouble());
+            value.push_back(device_start + tmp.toDouble());
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
                 tmp[j] = 0;
@@ -172,19 +176,18 @@ void Ocounter::plot_settings()
     ui->plot->setInteraction(QCP::iRangeZoom, true);// взвимодействие перетаскивания графика
 
     ui->plot->addGraph();
-    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle::ssCircle);
+    ui->plot->graph(0)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssCircle, Qt::green, Qt::green, 14));
     ui->plot->graph(0)->setLineStyle(QCPGraph::lsNone);
 
     ui->plot->xAxis->setLabel("t");
     ui->plot->yAxis->setLabel("L");
 
 
-    double now = QDateTime::currentDateTime().toTime_t();
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
     dateTicker->setDateTimeFormat("h:m:s");
     ui->plot->xAxis->setTicker(dateTicker);
 
-    ui->plot->xAxis->setRange(now, now + 100);
+    ui->plot->xAxis->setRange(device_start, device_start + 100);
 
 }
 
@@ -208,7 +211,7 @@ void Ocounter::real_plot()
             ui->plot->graph(0)->addData(q_x.last(), q_y.last());
         }
 
-        ui->plot->xAxis->setRange(q_x.first(), q_x.last());
+        ui->plot->xAxis->setRange(q_x.first() - 4, q_x.last() + 4);
         ui->plot->yAxis->setRange(q_y.first(), q_y.last());
     }
 
@@ -233,22 +236,15 @@ void Ocounter::plot()
 
 void Ocounter::create_shared_memory()
 {
-    if(!share_memory.create(graph_value.size())){
-        qDebug() << "no memory";
-        return;
-    }
-
-//    for (const auto& item : graph_value) {
-
-//        for (const double& point : item.second) {
-//            double *dist = (double*)share_memory.data();
-//            const double *source = item.second.data();
-//        }
+//    if(!share_memory.create(lazer_value.size())){
+//        qDebug() << "no memory";
+//        return;
 //    }
 
 //    share_memory.lock();
 //    double *dist = (double*)share_memory.data();
-//    const double *source = result.data();
+//    vector_to_array();
+//    const double *source = array.data();
 //    memcpy(dist, source, result.size() + 1);
 //    share_memory.unlock();
 }
@@ -316,10 +312,12 @@ void Ocounter::on_lon_clicked()
 //        key_pressed = false;
 //    }
 
-   aim_parser("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", lazer_value);
-   aim_parser("#Opt ch1 time104 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),", lazer_value);
-   aim_parser("#Opt ch1 time144 pnts:203.7(1745),", lazer_value);
-   //real_plot();
+//   aim_parser("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", lazer_value);
+//   aim_parser("#Opt ch1 time104 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),", lazer_value);
+//   aim_parser("#Opt ch1 time144 pnts:203.7(1745),", lazer_value);
+       parse("#Opt ch1 time104 #pnts:418.14(321)", graph_value);
+       parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
+   real_plot();
 }
 
 
