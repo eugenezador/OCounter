@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QSerialPort>
 #include <QSerialPortInfo>
-#include <QTime>
+#include <QDebug>
 
 
 class ObjectCounter : public QObject
@@ -12,20 +12,21 @@ class ObjectCounter : public QObject
     Q_OBJECT
 public:
     explicit ObjectCounter(QObject *parent = nullptr);
+    ~ObjectCounter();
 
-protected:
-    QByteArray data;
+public:
+    //QByteArray data;
 
-    QSerialPort *serial;// указатель на область памяти для экземпляра порта
+    QSerialPort *serial = nullptr;// указатель на область памяти для экземпляра порта
     QString currentPortName;// для записи предыдущего значения порта
 
-    std::map<double, QVector<double>> graph_value;
+    void open_serial_port(const QString &text);
+    void close_serial_port();
 
-    QVector<double> values;
+signals:
+    void received_data(QByteArray &data);
 
-    void serial_port_properties(const QString &text);
-
-    void parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value);
+public slots:
 
     void writeData(const QByteArray &data);
 

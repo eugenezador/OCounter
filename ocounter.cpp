@@ -1,78 +1,41 @@
-#include <QFileDialog>
-#include <QBuffer>
 
 #include "ocounter.h"
 #include "ui_ocounter.h"
-//#include "infowindow.h"
 
 Ocounter::Ocounter(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Ocounter)
+    , com_port(new ObjectCounter(this))
 {
     ui->setupUi(this);
-
-    com = new ObjectCounter();
-    serial = new QSerialPort(this);
 
 //чтение доступных портов при запуске
     foreach (const QSerialPortInfo &serialPortInfo, QSerialPortInfo::availablePorts()) {
         ui->portName->addItem(serialPortInfo.portName());
     }
 
-// параметры порта
-    //
-    currentPortName = ui->portName->currentText();
-    serial->setPortName(currentPortName);
-    serial->open(QIODevice::ReadWrite);
-    serial->setBaudRate(QSerialPort::Baud38400);
-    serial->setDataBits(QSerialPort::Data8);
-    serial->setParity(QSerialPort::NoParity);
-    serial->setStopBits(QSerialPort::OneStop);
-    serial->setFlowControl(QSerialPort::NoFlowControl);
-    connect(ui->portName, &QComboBox::currentTextChanged, this, &Ocounter::serial_port_properties);
-    //
+
+
+    connect(this, &Ocounter::open_serial_port, com_port, &ObjectCounter::open_serial_port);
+    connect(this, &Ocounter::sent_data_to_com_port, com_port, &ObjectCounter::writeData);
+    connect(this, &Ocounter::close_serial_port, com_port, &ObjectCounter::close_serial_port);
+
+    connect(com_port, &ObjectCounter::received_data, this, &Ocounter::parse_received_data);
+    connect(com_port, &ObjectCounter::received_data, this, &Ocounter::update_data);
 
     device_start = QDateTime::currentDateTime().toTime_t();
-
-    qDebug() << "time start " << device_start;
     plot_settings();
 
 }
 
 Ocounter::~Ocounter()
 {
-    serial->close();
-    delete serial;
+    delete com_port;
     delete ui;
 }
 
-void Ocounter::serial_port_properties(const QString &text)
-{
-    bool currentPortNameChanged = false;
-    //qDebug() << __FUNCTION__;
-    if (currentPortName != text) {
-        currentPortName = text;
-        currentPortNameChanged = true;
-       } else {
-           currentPortNameChanged = false;
-       }
 
-    if (currentPortNameChanged) {
-
-        serial->close();
-
-        serial->setPortName(currentPortName);
-
-        serial->open(QIODevice::ReadWrite);
-        serial->setBaudRate(QSerialPort::Baud38400);
-        serial->setDataBits(QSerialPort::Data8);
-        serial->setParity(QSerialPort::NoParity);
-        serial->setStopBits(QSerialPort::OneStop);
-        serial->setFlowControl(QSerialPort::NoFlowControl);
-    }
-}
-
-void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value)
+void Ocounter::parse_received_data(const QByteArray &data)
 {
     result.clear();
     QVector<double> values;
@@ -80,6 +43,12 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
     QString tmp;
     int k = 0;
     int flag = 0;
+
+    if(strstr(data.constData(),"none")) {
+        ui->read_log->append("No targets detected");
+    }
+
+    if(strstr(data.constData(),"time")) {
 
     for(int i = 0; i < data.size() ; i++) {
 
@@ -92,7 +61,7 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
 
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
-            time = device_start + tmp.toDouble();
+            time = /*device_start + */tmp.toDouble();
             result.push_back(tmp.toDouble());
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
@@ -123,6 +92,17 @@ void Ocounter::parse(const QByteArray &data, std::map<double, QVector<double>> &
 
     graph_value[time] = values;
     qDebug() << "parse in: " << graph_value;
+    }
+}
+
+void Ocounter::update_data(QByteArray &read_data)
+{
+    data.clear();
+    for(int i = 0; i < read_data.size(); i++) {
+        data[i] = read_data[i];
+    }
+    qDebug() << "update data" << data;
+
 }
 
 void Ocounter::plot_settings()
@@ -142,12 +122,11 @@ void Ocounter::plot_settings()
     dateTicker->setDateTimeFormat("h:m:s");
     ui->plot->xAxis->setTicker(dateTicker);
 
-//    ui->plot->xAxis->setRange(device_start - 100, device_start + 100);
-
 }
 
 void Ocounter::real_plot()
 {
+    if(lazer_on) {
 //    if( !q_x.empty() && !q_y.empty() )
 //        {
 //            q_x.clear();
@@ -177,128 +156,32 @@ void Ocounter::real_plot()
 
     ui->plot->replot();
     ui->plot->update();
-}
-
-void Ocounter::create_shared_memory()
-{
-    QBuffer buffer;
-    buffer.open(QBuffer::ReadWrite);
-    QDataStream out(&buffer);
-    out << sh;
-    int size = buffer.size();
-
-    if (!shared_memory.create(size)) {
-        qDebug() << "Unable to create shared memory segment.";
-        return;
     }
-    shared_memory.lock();
-    char *to = (char*)shared_memory.data();
-    const char *from = buffer.data().data();
-    memcpy(to, from, qMin(shared_memory.size(), size));
-    shared_memory.unlock();
-}
-
-void Ocounter::read_shared_memory()
-{
-    if (!shared_memory.attach()) {
-        qDebug() << "Unable to get from shared memory segment.";
-        return;
-    }
-
-    QBuffer buffer;
-    QDataStream in(&buffer);
-    //QVector<double> data_from_shared_memory;
-    double data_from_shared_memory;
-
-    shared_memory.lock();
-    buffer.setData((char*)shared_memory.constData(), shared_memory.size());
-    buffer.open(QBuffer::ReadOnly);
-    in >> data_from_shared_memory;
-    qDebug() << "data from shared memory" << data_from_shared_memory;
-    shared_memory.unlock();
-
-    shared_memory.detach();
-}
-
-void Ocounter::detach_shared_memory()
-{
-    if (!shared_memory.detach()) {
-        qDebug() << "can't detach";
-    }
-}
-
-
-void Ocounter::writeData(const QByteArray &data)
-{
-    if(serial->isOpen() == true){
-        serial->write(data);
-        serial->write("\r");
-        serial->waitForBytesWritten();
-
-        qDebug() << "write: " << data;
-        ui->write_log->append(data);
-
-        readData();
-    }
-    else
-    {
-        qDebug() << "not open";
-        ui->write_log->append("No Connection");
-    }
-}
-
-void Ocounter::readData()
-{
-    //QByteArray data;
-    if(serial->isReadable())
-    {
-       while ( serial->waitForReadyRead(90) )
-       {
-           // результат чтения накапливается в переменную data
-           data.append(serial->readAll());
-           if(strcmp(data.end() - 1 , "\\") == 1 && strcmp(data.end(), "r")) break;
-       }
-    }
-
-    if(strstr(data.constData(),"time") && strstr(data.constData(),"none") == 0) {
-        parse(data, graph_value);
-        real_plot();
-    }
-    if(strstr(data.constData(),"none")) {
-        qDebug() << "parse: none";
-    }
-    ui->read_log->append(data);
 }
 
 void Ocounter::on_lon_clicked()
 {
-//    if(key_pressed) {
-//        writeData("$LON");
-//        key_pressed = false;
-//    }
-
-   parse("#Opt ch1 time104 #pnts:1444.14(321)", graph_value);
-   parse("#Opt ch1 time81 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),", graph_value);
-   parse("#Opt ch1 time41 #pnts:104.14(321)", graph_value);
-   create_shared_memory();
-   real_plot();
+    if(key_pressed) {
+        emit sent_data_to_com_port("$LON");
+        lazer_on = true;
+        key_pressed = false;
+    }
 }
 
 
 void Ocounter::on_lof_clicked()
 {
-//    if(key_pressed) {
-//        writeData("$LOF");
-//        key_pressed = false;
-//    }
-
-read_shared_memory();
+    if(key_pressed) {
+    emit sent_data_to_com_port("$LOF");
+        lazer_on = false;
+        key_pressed = false;
+    }
 }
 
 void Ocounter::on_ver_clicked()
 {
     if(key_pressed) {
-        writeData("$VER");
+        emit sent_data_to_com_port("$VER");
         key_pressed = false;
     }
 }
@@ -306,7 +189,7 @@ void Ocounter::on_ver_clicked()
 void Ocounter::on_vlt_clicked()
 {
     if(key_pressed) {
-        writeData("$VLT");
+        emit sent_data_to_com_port("$VLT");
         key_pressed = false;
     }
 }
@@ -314,7 +197,7 @@ void Ocounter::on_vlt_clicked()
 void Ocounter::on_css_clicked()
 {
     if(key_pressed) {
-        writeData("$CSS");
+        emit sent_data_to_com_port("$CSS");
         key_pressed = false;
     }
 }
@@ -322,7 +205,7 @@ void Ocounter::on_css_clicked()
 void Ocounter::on_tm1_clicked()
 {
     if(key_pressed) {
-        writeData("$TM1");
+        emit sent_data_to_com_port("$TM1");
         key_pressed = false;
     }
 }
@@ -330,7 +213,7 @@ void Ocounter::on_tm1_clicked()
 void Ocounter::on_rst_clicked()
 {
    if(key_pressed) {
-       writeData("$RST");
+       emit sent_data_to_com_port("$RST");
        key_pressed = false;
    }
 }
@@ -338,7 +221,8 @@ void Ocounter::on_rst_clicked()
 void Ocounter::on_syn1_clicked()
 {
     if(key_pressed) {
-        writeData("$SYN1");
+//        writeData("$SYN1");
+        emit sent_data_to_com_port("$SYN1");
         key_pressed = false;
     }
 }
@@ -346,7 +230,7 @@ void Ocounter::on_syn1_clicked()
 void Ocounter::on_syn2_clicked()
 {
     if(key_pressed) {
-        writeData("$SYN2");
+        emit sent_data_to_com_port("$SYN2");
         key_pressed = false;
     }
 }
@@ -362,7 +246,7 @@ void Ocounter::on_srr_clicked()
         data[3] = 'R';
         data[4] = ' ';
         data[5] = ui->srr_spinBox->value();
-        writeData(data);
+        emit sent_data_to_com_port(data);
         data.resize(0);
         key_pressed = false;
     }
@@ -371,19 +255,15 @@ void Ocounter::on_srr_clicked()
 void Ocounter::on_nim_clicked()
 {
     if(key_pressed) {
-//        data.resize(0);
-//        data.resize(5);
-//        data[0] = '$';
-//        data[1] = 'N';
-//        data[2] = 'I';
-//        data[3] = 'M';
-//        data[4] = ' ';
-//        data[5] = ui->nim_spinBox->value();
-        for(int i = 0; i < ui->nim_spinBox->value(); i++) {
-            writeData("$NIM 1");
-        }
-//        writeData(data);
-//        data.resize(0);
+        data.resize(0);
+        data.resize(5);
+        data[0] = '$';
+        data[1] = 'N';
+        data[2] = 'I';
+        data[3] = 'M';
+        data[4] = ' ';
+        data[5] = ui->nim_spinBox->value();
+        emit sent_data_to_com_port(data);
         key_pressed = false;
     }
 }
@@ -398,43 +278,43 @@ void Ocounter::keyPressEvent(QKeyEvent *event)
     }
 
     if(event->key() == Qt::Key_F1) {
-        writeData("$NIM 1");
+        emit sent_data_to_com_port("$NIM 1");
     }
 
     if(event->key() == Qt::Key_V) {
-        writeData("$VER");
+        emit sent_data_to_com_port("$VER");
     }
 
     if(event->key() == Qt::Key_F2) {
-        writeData("$LON");
+        emit sent_data_to_com_port("$LON");
     }
 
     if(event->key() == Qt::Key_F3) {
-        writeData("$LOF");
+        emit sent_data_to_com_port("$LOF");
     }
 
     if(event->key() == Qt::Key_F4) {
-        writeData("$CSS");
+        emit sent_data_to_com_port("$CSS");
     }
 
     if(event->key() == Qt::Key_F5) {
-        writeData("$VLT");
+        emit sent_data_to_com_port("$VLT");
     }
 
     if(event->key() == Qt::Key_T) {
-        writeData("$TM1");
+        emit sent_data_to_com_port("$TM1");
     }
 
     if(event->key() == Qt::Key_R) {
-        writeData("$RST");
+        emit sent_data_to_com_port("$RST");
     }
 
     if(event->key() == Qt::Key_F6) {
-        writeData("$SYN1");
+        emit sent_data_to_com_port("$SYN1");
     }
 
     if(event->key() == Qt::Key_F7) {
-        writeData("$SYN2");
+        emit sent_data_to_com_port("$SYN2");
     }
 
 
@@ -443,26 +323,25 @@ void Ocounter::keyPressEvent(QKeyEvent *event)
 void Ocounter::on_connected_clicked()
 {
     if(is_connect) {
-        serial->close();
         ui->connected->setText("Connect");
         ui->connected->setStyleSheet("*{ background-color: rgb(0, 153, 0); color:  rgb(255, 255, 255)}");
 
+        emit close_serial_port();
         is_connect = false;
         qDebug() << "serial close";
     }
     else if(!is_connect) {
-        serial->open(QIODevice::ReadWrite);
-        serial->setBaudRate(QSerialPort::Baud38400);
+        emit open_serial_port(ui->portName->currentText());
+        emit sent_data_to_com_port("$VER");
 
-        data.resize(0);
-        writeData("$VER");
 
-        if(data.size() != 0) {
+        if(data[0]) {
             ui->connected->setText("Disconnect");
             ui->connected->setStyleSheet("*{ background-color: rgb(255,0,0); color:  rgb(255, 255, 255)}");
 
             is_connect = true;
             qDebug() << "serial open";
+            ui->read_log->append(data);
         } else {
             ui->read_log->append("Connection error");
         }
@@ -472,7 +351,7 @@ void Ocounter::on_connected_clicked()
 void Ocounter::on_nim1_clicked()
 {
     if(key_pressed) {
-        writeData("$NIM 1");
+//        writeData("$NIM 1");
         key_pressed = false;
     }
 }

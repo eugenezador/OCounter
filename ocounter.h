@@ -2,9 +2,6 @@
 #define OCOUNTER_H
 
 #include <QMainWindow>
-#include <QSerialPort>
-#include <QSerialPortInfo>
-#include <QSharedMemory>
 //#include <sys/mman.h>
 #include "qcustomplot.h"
 #include "objectcounter.h"
@@ -22,30 +19,23 @@ public:
     Ocounter(QWidget *parent = nullptr);
     ~Ocounter();
 
-    void serial_port_properties(const QString &text);
+    void parse_received_data(const QByteArray &data);
 
-    void parse(const QByteArray &data, std::map<double, QVector<double>> &graph_value);
+    void update_data(QByteArray &read_data);
 
     // Методы графика
     void plot_settings();
 
     void real_plot();
 
-    //shared memory
-    void create_shared_memory();
 
-    void read_shared_memory();
-
-    void detach_shared_memory();
-
+signals:
+    void sent_data_to_com_port(const QByteArray &data);
+    void recive_data_from_com_port(QByteArray &data);
+    void open_serial_port(const QString &text);
+    void close_serial_port();
 
 private slots:
-
- //Чтение и запись
-    void writeData(const QByteArray &data);
-
-    void readData();
-
     void on_lon_clicked();
 
     void on_lof_clicked();
@@ -86,14 +76,13 @@ private:
     double max_L = 0; // максимальное расстояние до цели (для масштабирования графика)
 
     bool key_pressed = false;
-    bool is_connect = false;
+    bool is_connect = false; // для отображения кнопик соединения с портом
     bool lazer_on = false;
+/////////////////////
+    QByteArray data = "14"; // при первом запуске кнопки connect контейнер data не обновляется
+/////////////////////
+    ObjectCounter *com_port;
 
-    QByteArray data;
-
-    ObjectCounter *com;
-
-    QSerialPort *serial;// указатель на область памяти для экземпляра порта
     QString currentPortName;// для записи предыдущего значения порта
 
 //    контейнер для хранения данных о целях
@@ -102,14 +91,8 @@ private:
 
     QVector<double> result; // массив для записи команды распознавания в распределяемую память
 
-    QVector<double> q_x, q_y; // массив для записи коодинат
+    QVector<double> q_x; // массив для записи коодинат
 
-    QVector<double> values;
-
-    //shared memory
-    QSharedMemory shared_memory;
-
-    double sh = 144;
-
+    QVector<double> values; // вектор(массив) расстояний до обнаруженных объектов за 1 выстрел
 };
 #endif // OCOUNTER_H
