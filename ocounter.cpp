@@ -5,7 +5,7 @@
 Ocounter::Ocounter(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Ocounter)
-    , com_port(new ObjectCounter(this))
+    , com_port(new ComPort(this))
 {
     ui->setupUi(this);
 
@@ -16,12 +16,12 @@ Ocounter::Ocounter(QWidget *parent)
 
 
 
-    connect(this, &Ocounter::open_serial_port, com_port, &ObjectCounter::open_serial_port);
-    connect(this, &Ocounter::sent_data_to_com_port, com_port, &ObjectCounter::writeData);
-    connect(this, &Ocounter::close_serial_port, com_port, &ObjectCounter::close_serial_port);
+    connect(this, &Ocounter::open_serial_port, com_port, &ComPort::open_serial_port);
+    connect(this, &Ocounter::sent_data_to_com_port, com_port, &ComPort::writeData);
+    connect(this, &Ocounter::close_serial_port, com_port, &ComPort::close_serial_port);
 
-    connect(com_port, &ObjectCounter::received_data, this, &Ocounter::parse_received_data);
-    connect(com_port, &ObjectCounter::received_data, this, &Ocounter::update_data);
+    connect(com_port, &ComPort::received_data, this, &Ocounter::parse_received_data);
+    connect(com_port, &ComPort::received_data, this, &Ocounter::update_data);
 
     device_start = QDateTime::currentDateTime().toTime_t();
     plot_settings();
@@ -61,7 +61,7 @@ void Ocounter::parse_received_data(const QByteArray &data)
 
         if (data[i] == ' ' && tmp.size() != 0) {
             flag = 0;
-            time = /*device_start + */tmp.toDouble();
+            time = device_start + tmp.toDouble();
             result.push_back(tmp.toDouble());
             k =0;
             for(int j = 0; tmp[j] != '\0'; j++) {
@@ -162,7 +162,7 @@ void Ocounter::real_plot()
 void Ocounter::on_lon_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$LON");
+        emit sent_data_to_com_port("$LON\r");
         lazer_on = true;
         key_pressed = false;
     }
@@ -172,7 +172,7 @@ void Ocounter::on_lon_clicked()
 void Ocounter::on_lof_clicked()
 {
     if(key_pressed) {
-    emit sent_data_to_com_port("$LOF");
+    emit sent_data_to_com_port("$LOF\r");
         lazer_on = false;
         key_pressed = false;
     }
@@ -181,7 +181,7 @@ void Ocounter::on_lof_clicked()
 void Ocounter::on_ver_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$VER");
+        emit sent_data_to_com_port("$VER\r");
         key_pressed = false;
     }
 }
@@ -189,7 +189,7 @@ void Ocounter::on_ver_clicked()
 void Ocounter::on_vlt_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$VLT");
+        emit sent_data_to_com_port("$VLT\r");
         key_pressed = false;
     }
 }
@@ -197,7 +197,7 @@ void Ocounter::on_vlt_clicked()
 void Ocounter::on_css_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$CSS");
+        emit sent_data_to_com_port("$CSS\r");
         key_pressed = false;
     }
 }
@@ -205,7 +205,7 @@ void Ocounter::on_css_clicked()
 void Ocounter::on_tm1_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$TM1");
+        emit sent_data_to_com_port("$TM1\r");
         key_pressed = false;
     }
 }
@@ -213,7 +213,7 @@ void Ocounter::on_tm1_clicked()
 void Ocounter::on_rst_clicked()
 {
    if(key_pressed) {
-       emit sent_data_to_com_port("$RST");
+       emit sent_data_to_com_port("$RST\r");
        key_pressed = false;
    }
 }
@@ -221,8 +221,7 @@ void Ocounter::on_rst_clicked()
 void Ocounter::on_syn1_clicked()
 {
     if(key_pressed) {
-//        writeData("$SYN1");
-        emit sent_data_to_com_port("$SYN1");
+        emit sent_data_to_com_port("$SYN1\r");
         key_pressed = false;
     }
 }
@@ -230,7 +229,7 @@ void Ocounter::on_syn1_clicked()
 void Ocounter::on_syn2_clicked()
 {
     if(key_pressed) {
-        emit sent_data_to_com_port("$SYN2");
+        emit sent_data_to_com_port("$SYN2\r");
         key_pressed = false;
     }
 }
@@ -238,14 +237,15 @@ void Ocounter::on_syn2_clicked()
 void Ocounter::on_srr_clicked()
 {
     if(key_pressed) {
-        data.resize(0);
-        data.resize(5);
+        data.clear();
+        data.resize(6);
         data[0] = '$';
         data[1] = 'S';
         data[2] = 'R';
         data[3] = 'R';
         data[4] = ' ';
         data[5] = ui->srr_spinBox->value();
+        data[6] = '\r';
         emit sent_data_to_com_port(data);
         data.resize(0);
         key_pressed = false;
@@ -255,14 +255,15 @@ void Ocounter::on_srr_clicked()
 void Ocounter::on_nim_clicked()
 {
     if(key_pressed) {
-        data.resize(0);
-        data.resize(5);
+        data.clear();
+        data.resize(6);
         data[0] = '$';
         data[1] = 'N';
         data[2] = 'I';
         data[3] = 'M';
         data[4] = ' ';
         data[5] = ui->nim_spinBox->value();
+        data[6] = '\r';
         emit sent_data_to_com_port(data);
         key_pressed = false;
     }
@@ -278,46 +279,44 @@ void Ocounter::keyPressEvent(QKeyEvent *event)
     }
 
     if(event->key() == Qt::Key_F1) {
-        emit sent_data_to_com_port("$NIM 1");
+        emit sent_data_to_com_port("$NIM 1\r");
     }
 
     if(event->key() == Qt::Key_V) {
-        emit sent_data_to_com_port("$VER");
+        emit sent_data_to_com_port("$VER\r");
     }
 
     if(event->key() == Qt::Key_F2) {
-        emit sent_data_to_com_port("$LON");
+        emit sent_data_to_com_port("$LON\r");
     }
 
     if(event->key() == Qt::Key_F3) {
-        emit sent_data_to_com_port("$LOF");
+        emit sent_data_to_com_port("$LOF\r");
     }
 
     if(event->key() == Qt::Key_F4) {
-        emit sent_data_to_com_port("$CSS");
+        emit sent_data_to_com_port("$CSS\r");
     }
 
     if(event->key() == Qt::Key_F5) {
-        emit sent_data_to_com_port("$VLT");
+        emit sent_data_to_com_port("$VLT\r");
     }
 
     if(event->key() == Qt::Key_T) {
-        emit sent_data_to_com_port("$TM1");
+        emit sent_data_to_com_port("$TM1\r");
     }
 
     if(event->key() == Qt::Key_R) {
-        emit sent_data_to_com_port("$RST");
+        emit sent_data_to_com_port("$RST\r");
     }
 
     if(event->key() == Qt::Key_F6) {
-        emit sent_data_to_com_port("$SYN1");
+        emit sent_data_to_com_port("$SYN1\r");
     }
 
     if(event->key() == Qt::Key_F7) {
-        emit sent_data_to_com_port("$SYN2");
+        emit sent_data_to_com_port("$SYN2\r");
     }
-
-
 }
 
 void Ocounter::on_connected_clicked()
@@ -332,7 +331,7 @@ void Ocounter::on_connected_clicked()
     }
     else if(!is_connect) {
         emit open_serial_port(ui->portName->currentText());
-        emit sent_data_to_com_port("$VER");
+        emit sent_data_to_com_port("$VER\r");
 
 
         if(data[0]) {
@@ -351,7 +350,7 @@ void Ocounter::on_connected_clicked()
 void Ocounter::on_nim1_clicked()
 {
     if(key_pressed) {
-//        writeData("$NIM 1");
+        emit sent_data_to_com_port("$NIM 1\r");
         key_pressed = false;
     }
 }

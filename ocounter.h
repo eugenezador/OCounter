@@ -4,7 +4,7 @@
 #include <QMainWindow>
 //#include <sys/mman.h>
 #include "qcustomplot.h"
-#include "objectcounter.h"
+#include "comport.h"
 #include "infowindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -81,9 +81,7 @@ private:
 /////////////////////
     QByteArray data = "14"; // при первом запуске кнопки connect контейнер data не обновляется
 /////////////////////
-    ObjectCounter *com_port;
-
-    QString currentPortName;// для записи предыдущего значения порта
+    ComPort *com_port;
 
 //    контейнер для хранения данных о целях
 //    (время обнаружения - массив расстояний до обнаруженных объектов)
