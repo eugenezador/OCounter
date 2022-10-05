@@ -15,6 +15,9 @@ public:
     explicit InfoWindow(QWidget *parent = nullptr);
     ~InfoWindow();
 
+signals:
+    void info_enable();
+
 private:
     Ui::InfoWindow *ui;
 };

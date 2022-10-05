@@ -19,9 +19,15 @@ public:
     Ocounter(QWidget *parent = nullptr);
     ~Ocounter();
 
+    // метод для выделения из строки считанной с устройства данных
+    // о времени и расстоянии до распознанных целей и добавляет запись в контейнер graph_value
     void parse_received_data(const QByteArray &data);
 
-    void update_data(QByteArray &read_data);
+    void info_bottom_enable();
+
+    void update_data(QByteArray &read_data); // слот обновляет массив данных прочитанных с устройства
+
+
 
     // Методы графика
     void plot_settings();
@@ -70,7 +76,7 @@ private:
 
     void  keyPressEvent(QKeyEvent *event);
 
-    double device_start = 0;
+    double device_start = 0;// при старте программы в эту переменную записывается текущее unix-time
 
     double min_L = 99999; // минимальное расстоние до цели (для масштабирования графика)
     double max_L = 0; // максимальное расстояние до цели (для масштабирования графика)

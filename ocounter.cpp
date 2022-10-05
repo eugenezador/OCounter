@@ -5,6 +5,7 @@
 Ocounter::Ocounter(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::Ocounter)
+    , window(new InfoWindow(this))
     , com_port(new ComPort(this))
 {
     ui->setupUi(this);
@@ -23,7 +24,9 @@ Ocounter::Ocounter(QWidget *parent)
     connect(com_port, &ComPort::received_data, this, &Ocounter::parse_received_data);
     connect(com_port, &ComPort::received_data, this, &Ocounter::update_data);
 
-    device_start = QDateTime::currentDateTime().toTime_t();
+    connect(window, &InfoWindow::info_enable, this, &Ocounter::info_bottom_enable);
+
+    device_start = QDateTime::currentDateTimeUtc().toTime_t();
     plot_settings();
 
 }
@@ -31,6 +34,7 @@ Ocounter::Ocounter(QWidget *parent)
 Ocounter::~Ocounter()
 {
     delete com_port;
+    delete window;
     delete ui;
 }
 
@@ -48,7 +52,7 @@ void Ocounter::parse_received_data(const QByteArray &data)
         ui->read_log->append("No targets detected");
     }
 
-    if(strstr(data.constData(),"time")) {
+    else if(strstr(data.constData(),"time")) {
 
     for(int i = 0; i < data.size() ; i++) {
 
@@ -93,6 +97,11 @@ void Ocounter::parse_received_data(const QByteArray &data)
     graph_value[time] = values;
     qDebug() << "parse in: " << graph_value;
     }
+}
+
+void Ocounter::info_bottom_enable()
+{
+    ui->info->setEnabled(true);
 }
 
 void Ocounter::update_data(QByteArray &read_data)
@@ -357,6 +366,8 @@ void Ocounter::on_nim1_clicked()
 
 void Ocounter::on_info_clicked()
 {
-    window = new InfoWindow(this);
+
     window->show();
+    ui->info->setEnabled(false);
+    connect(window, &InfoWindow::info_enable, this, &Ocounter::info_bottom_enable);
 }
