@@ -188,14 +188,14 @@ void Ocounter::real_plot()
 
 void Ocounter::on_lon_clicked()
 {
-//    if(key_pressed) {
-//        emit sent_data_to_com_port("$LON\r");
-//        lazer_on = true;
-//        key_pressed = false;
-//    }
+    if(key_pressed) {
+        emit sent_data_to_com_port("$LON\r");
+        lazer_on = true;
+        key_pressed = false;
+    }
 
-    result << 1 << 4 << 4 << 1;
-    emit write_to_shared_memory(result);
+//    result << 1 << 4 << 4 << 1;
+//    emit write_to_shared_memory(result);
 }
 
 
