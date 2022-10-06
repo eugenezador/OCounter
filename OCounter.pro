@@ -13,12 +13,14 @@ SOURCES += \
     comport.cpp \
     infowindow.cpp \
     main.cpp \
+    mshare.cpp \
     ocounter.cpp \
     qcustomplot.cpp
 
 HEADERS += \
     comport.h \
     infowindow.h \
+    mshare.h \
     ocounter.h \
     qcustomplot.h
 

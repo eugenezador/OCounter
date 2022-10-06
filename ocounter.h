@@ -2,10 +2,16 @@
 #define OCOUNTER_H
 
 #include <QMainWindow>
+
+//#include <QSharedMemory>
+//#include <QBuffer>
+
+//#include <QDataStream>
 //#include <sys/mman.h>
 #include "qcustomplot.h"
 #include "comport.h"
 #include "infowindow.h"
+#include "mshare.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class Ocounter; }
@@ -27,19 +33,29 @@ public:
 
     void update_data(QByteArray &read_data); // слот обновляет массив данных прочитанных с устройства
 
-
+    void update_shared_memory_data(QVector<double> vector);
 
     // Методы графика
     void plot_settings();
 
     void real_plot();
 
-
 signals:
+    // сигналы для работы с com портом
+
     void sent_data_to_com_port(const QByteArray &data);
+
     void recive_data_from_com_port(QByteArray &data);
+
     void open_serial_port(const QString &text);
+
     void close_serial_port();
+
+    // сигналы для работы с распределяемой памятью
+
+    void write_to_shared_memory(QVector<double> data);
+
+    void read_from_shared_memory();
 
 private slots:
     void on_lon_clicked();
@@ -79,15 +95,21 @@ private:
     double device_start = 0;// при старте программы в эту переменную записывается текущее unix-time
 
     double min_L = 99999; // минимальное расстоние до цели (для масштабирования графика)
+
     double max_L = 0; // максимальное расстояние до цели (для масштабирования графика)
 
     bool key_pressed = false;
+
     bool is_connect = false; // для отображения кнопик соединения с портом
+
     bool lazer_on = false;
 /////////////////////
-    QByteArray data = "14"; // при первом запуске кнопки connect контейнер data не обновляется
+    QByteArray data = ""; // при первом запуске кнопки connect контейнер data не обновляется
 /////////////////////
     ComPort *com_port;
+
+    MShare *shared_memory;
+//    QSharedMemory shared_memory;
 
 //    контейнер для хранения данных о целях
 //    (время обнаружения - массив расстояний до обнаруженных объектов)

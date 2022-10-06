@@ -1,4 +1,5 @@
 
+#include <QFileDialog>
 #include "ocounter.h"
 #include "ui_ocounter.h"
 
@@ -7,6 +8,8 @@ Ocounter::Ocounter(QWidget *parent)
     , ui(new Ui::Ocounter)
     , window(new InfoWindow(this))
     , com_port(new ComPort(this))
+    , shared_memory(new MShare(this))
+//    , shared_memory("QSharedMemoryExample")
 {
     ui->setupUi(this);
 
@@ -15,24 +18,25 @@ Ocounter::Ocounter(QWidget *parent)
         ui->portName->addItem(serialPortInfo.portName());
     }
 
-
-
     connect(this, &Ocounter::open_serial_port, com_port, &ComPort::open_serial_port);
     connect(this, &Ocounter::sent_data_to_com_port, com_port, &ComPort::writeData);
     connect(this, &Ocounter::close_serial_port, com_port, &ComPort::close_serial_port);
-
     connect(com_port, &ComPort::received_data, this, &Ocounter::parse_received_data);
     connect(com_port, &ComPort::received_data, this, &Ocounter::update_data);
 
     connect(window, &InfoWindow::info_enable, this, &Ocounter::info_bottom_enable);
 
+    connect(this, &Ocounter::write_to_shared_memory, shared_memory, &MShare::write_to_shared_memory);
+    connect(this, &Ocounter::read_from_shared_memory, shared_memory, &MShare::read_from_shared_memory);
+//    connect(shared_memory, &MShare::read_data_from_shared_memory, this, &Ocounter::update_shared_memory_data);
+
     device_start = QDateTime::currentDateTimeUtc().toTime_t();
     plot_settings();
-
 }
 
 Ocounter::~Ocounter()
 {
+    delete shared_memory;
     delete com_port;
     delete window;
     delete ui;
@@ -95,6 +99,11 @@ void Ocounter::parse_received_data(const QByteArray &data)
     }
 
     graph_value[time] = values;
+
+    real_plot();
+
+//    emit write_to_shared_memory(result);
+
     qDebug() << "parse in: " << graph_value;
     }
 }
@@ -112,6 +121,15 @@ void Ocounter::update_data(QByteArray &read_data)
     }
     qDebug() << "update data" << data;
 
+}
+
+void Ocounter::update_shared_memory_data(QVector<double> vector)
+{
+    result.clear();
+    for(int i = 0; i < vector.size(); i++) {
+        result[i] = vector[i];
+    }
+    qDebug() << "update memory_data" << result;
 }
 
 void Ocounter::plot_settings()
@@ -170,11 +188,14 @@ void Ocounter::real_plot()
 
 void Ocounter::on_lon_clicked()
 {
-    if(key_pressed) {
-        emit sent_data_to_com_port("$LON\r");
-        lazer_on = true;
-        key_pressed = false;
-    }
+//    if(key_pressed) {
+//        emit sent_data_to_com_port("$LON\r");
+//        lazer_on = true;
+//        key_pressed = false;
+//    }
+
+    result << 1 << 4 << 4 << 1;
+    emit write_to_shared_memory(result);
 }
 
 
@@ -189,10 +210,12 @@ void Ocounter::on_lof_clicked()
 
 void Ocounter::on_ver_clicked()
 {
-    if(key_pressed) {
-        emit sent_data_to_com_port("$VER\r");
-        key_pressed = false;
-    }
+//    if(key_pressed) {
+//        emit sent_data_to_com_port("$VER\r");
+//        key_pressed = false;
+//    }
+
+    emit read_from_shared_memory();
 }
 
 void Ocounter::on_vlt_clicked()
@@ -343,7 +366,7 @@ void Ocounter::on_connected_clicked()
         emit sent_data_to_com_port("$VER\r");
 
 
-        if(data[0]) {
+        if(data.size() != 0) {
             ui->connected->setText("Disconnect");
             ui->connected->setStyleSheet("*{ background-color: rgb(255,0,0); color:  rgb(255, 255, 255)}");
 
