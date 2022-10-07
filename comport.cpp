@@ -47,9 +47,15 @@ void ComPort::writeData(const QByteArray &data)
 
 void ComPort::readData()
 {
-    QByteArray read_data = serial->readAll();
+    read_data.append(serial->readAll());
 
-    qDebug() << "read: " << read_data;
+    if(strstr(read_data, "\r")){
 
-    emit received_data(read_data);
+        qDebug() << "full read_data: " << read_data;
+
+        emit received_data(read_data);
+
+        read_data.clear();
+    }
+    else qDebug() << "not full read_data: " << read_data;
 }

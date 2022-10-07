@@ -13,6 +13,8 @@ public:
     explicit ComPort(QObject *parent = nullptr);
     ~ComPort();
 
+    QByteArray read_data;
+
 public:
     QSerialPort *serial = nullptr;// указатель на область памяти для экземпляра порта
 

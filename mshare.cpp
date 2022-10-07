@@ -10,10 +10,6 @@ MShare::MShare(QObject *parent) : QObject(parent)
 
 void MShare::write_to_shared_memory(QVector<double> vector)
 {
-
-//    QVector<double> vec;
-//    vec << 1<<2<<3<<4<<5;
-
     QBuffer buffer;
     buffer.open(QBuffer::ReadWrite);
     QDataStream out(&buffer);

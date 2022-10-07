@@ -1,4 +1,3 @@
-
 #include <QFileDialog>
 #include "ocounter.h"
 #include "ui_ocounter.h"
@@ -9,7 +8,6 @@ Ocounter::Ocounter(QWidget *parent)
     , window(new InfoWindow(this))
     , com_port(new ComPort(this))
     , shared_memory(new MShare(this))
-//    , shared_memory("QSharedMemoryExample")
 {
     ui->setupUi(this);
 
@@ -28,7 +26,7 @@ Ocounter::Ocounter(QWidget *parent)
 
     connect(this, &Ocounter::write_to_shared_memory, shared_memory, &MShare::write_to_shared_memory);
     connect(this, &Ocounter::read_from_shared_memory, shared_memory, &MShare::read_from_shared_memory);
-//    connect(shared_memory, &MShare::read_data_from_shared_memory, this, &Ocounter::update_shared_memory_data);
+//    connect(shared_memory, &MShare::read_data_from_shared_memory, this, &Ocounter::update_shared_memory_data, Qt::QueuedConnection);
 
     device_start = QDateTime::currentDateTimeUtc().toTime_t();
     plot_settings();
@@ -103,6 +101,8 @@ void Ocounter::parse_received_data(const QByteArray &data)
     real_plot();
 
 //    emit write_to_shared_memory(result);
+
+//    ui->read_log->setText(result)
 
     qDebug() << "parse in: " << graph_value;
     }
@@ -184,6 +184,16 @@ void Ocounter::real_plot()
     ui->plot->replot();
     ui->plot->update();
     }
+}
+
+void Ocounter::com_port_permission()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+    tr("Open Script"), "/", tr("Script Files (*permission.sh)"));
+
+    if (QProcess::execute(QString("/bin/sh ") + fileName) < 0)
+        qDebug() << "Failed to run";
+
 }
 
 void Ocounter::on_lon_clicked()
@@ -353,6 +363,7 @@ void Ocounter::keyPressEvent(QKeyEvent *event)
 
 void Ocounter::on_connected_clicked()
 {
+//    com_port_permission();
     if(is_connect) {
         ui->connected->setText("Connect");
         ui->connected->setStyleSheet("*{ background-color: rgb(0, 153, 0); color:  rgb(255, 255, 255)}");

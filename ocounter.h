@@ -40,6 +40,8 @@ public:
 
     void real_plot();
 
+    void com_port_permission();
+
 signals:
     // сигналы для работы с com портом
 
