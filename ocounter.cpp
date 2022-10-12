@@ -28,6 +28,7 @@ Ocounter::Ocounter(QWidget *parent)
     connect(this, &Ocounter::read_from_shared_memory, shared_memory, &MShare::read_from_shared_memory);
 //    connect(shared_memory, &MShare::read_data_from_shared_memory, this, &Ocounter::update_shared_memory_data, Qt::QueuedConnection);
 
+
     device_start = QDateTime::currentDateTimeUtc().toTime_t();
     plot_settings();
 }
@@ -44,54 +45,73 @@ Ocounter::~Ocounter()
 void Ocounter::parse_received_data(const QByteArray &data)
 {
     result.clear();
+        QString str = QString(data);
     QVector<double> values;
     double time = 0;
     QString tmp;
     int k = 0;
     int flag = 0;
 
+    // если нет целей сразу выодим соответствующее сообщение
     if(strstr(data.constData(),"none")) {
         ui->read_log->append("No targets detected");
     }
 
     else if(strstr(data.constData(),"time")) {
 
-    for(int i = 0; i < data.size() ; i++) {
+    for(int i = 0; i < str.size() ; i++) {
 
-        if(data[i]  == ',' && i == data.size() - 1) break;
+        //выходим из цикла если последний элемент запятая
+        if(str[i]  == ',' && i == str.size() - 1) break;
 
-        if(data[i] == 'e') {
+        // ловим начало числа авремени
+        if(str[i] == 'e') {
+            qDebug() << "flag 1 e";
             flag = 1;
             i++;
         }
 
-        if (data[i] == ' ' && tmp.size() != 0) {
+        // ловим конец числа времени
+        if (str[i] == ' ' && str.size() != 0) {
             flag = 0;
+            qDebug() << "time : "<< tmp;
             time = device_start + tmp.toDouble();
-            result.push_back(tmp.toDouble());
+//            result.push_back(tmp.toDouble());
             k =0;
-            for(int j = 0; tmp[j] != '\0'; j++) {
-                tmp[j] = 0;
-            }
+
+            tmp.clear();
         }
 
-        if((data[i] == ':' || data[i] == ',') && tmp.size() != 0) {
+        // ловим начало первой цели
+        if(str[i] == ':' /*&& tmp.size() != 0*/) {
+            qDebug() << "flag 1 :";
             flag = 1;
             i++;
         }
 
-        if (data[i] == '(' && tmp.size() != 0) {
+        // ловим начало второй цели
+        if(str[i] == ',' /*&& tmp.size() != 0*/ && i != data.size() - 1 ) {
+            qDebug() << "flag 1 ,";
+            flag = 1;
+            i++;
+        }
+
+        // ловим конец числа
+        if (str[i] == '(' && data.size() != 0) {
+            qDebug() << "point: " << tmp;
             flag = 0;
             values.append(tmp.toDouble());
-            result.push_back(tmp.toDouble());
+//            result.push_back(tmp.toDouble());
             k =0;
-            for(int j = 0; j < tmp.size(); j++) {
-                tmp[j] = 0;
-            }
+
+            tmp.clear();
         }
 
+        // если мы внутри нужного числа, то записываем i-й элемент в буферный массив
         if(flag) {
-            tmp[k] = data[i];
+//            qDebug() << "inside need data: "<< str.at(i);
+            tmp[k] = str[i];
+//            qDebug() << "inside need tmp: "<< tmp.at(k);
             k++;
         }
     }
@@ -102,9 +122,9 @@ void Ocounter::parse_received_data(const QByteArray &data)
 
 //    emit write_to_shared_memory(result);
 
-//    ui->read_log->setText(result)
+    ui->read_log->append(QString(data));
 
-    qDebug() << "parse in: " << graph_value;
+    qDebug() << "parse : " << graph_value;
     }
 }
 
@@ -204,6 +224,8 @@ void Ocounter::on_lon_clicked()
         key_pressed = false;
     }
 
+//    parse_received_data("Opt ch time255405 pnts:292.5(4383),331.4(1077),");
+
 //    result << 1 << 4 << 4 << 1;
 //    emit write_to_shared_memory(result);
 }
@@ -288,8 +310,9 @@ void Ocounter::on_srr_clicked()
         data[4] = ' ';
         data[5] = ui->srr_spinBox->value();
         data[6] = '\r';
+
         emit sent_data_to_com_port(data);
-        data.resize(0);
+
         key_pressed = false;
     }
 }
@@ -306,7 +329,9 @@ void Ocounter::on_nim_clicked()
         data[4] = ' ';
         data[5] = ui->nim_spinBox->value();
         data[6] = '\r';
+
         emit sent_data_to_com_port(data);
+
         key_pressed = false;
     }
 }
@@ -376,6 +401,8 @@ void Ocounter::on_connected_clicked()
         emit open_serial_port(ui->portName->currentText());
         emit sent_data_to_com_port("$VER\r");
 
+//        sleep(1);
+
 
         if(data.size() != 0) {
             ui->connected->setText("Disconnect");
@@ -402,6 +429,6 @@ void Ocounter::on_info_clicked()
 {
 
     window->show();
-    ui->info->setEnabled(false);
-    connect(window, &InfoWindow::info_enable, this, &Ocounter::info_bottom_enable);
+//    ui->info->setEnabled(false);
+//    connect(window, &InfoWindow::info_enable, this, &Ocounter::info_bottom_enable);
 }

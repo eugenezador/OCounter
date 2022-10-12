@@ -10,6 +10,6 @@ InfoWindow::InfoWindow(QWidget *parent) :
 
 InfoWindow::~InfoWindow()
 {
-    emit info_enable();
+//    emit info_enable();
     delete ui;
 }

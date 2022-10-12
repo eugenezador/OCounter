@@ -57,5 +57,5 @@ void ComPort::readData()
 
         read_data.clear();
     }
-    else qDebug() << "not full read_data: " << read_data;
+//    else qDebug() << "not full read_data: " << read_data;
 }

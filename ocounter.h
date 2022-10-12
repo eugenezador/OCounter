@@ -2,12 +2,9 @@
 #define OCOUNTER_H
 
 #include <QMainWindow>
+//#include <string.h>
 
-//#include <QSharedMemory>
-//#include <QBuffer>
 
-//#include <QDataStream>
-//#include <sys/mman.h>
 #include "qcustomplot.h"
 #include "comport.h"
 #include "infowindow.h"
@@ -106,7 +103,7 @@ private:
 
     bool lazer_on = false;
 /////////////////////
-    QByteArray data = ""; // при первом запуске кнопки connect контейнер data не обновляется
+    QByteArray data = "$PS_40250 v.07c_0420"; // при первом запуске кнопки connect контейнер data не обновляется
 /////////////////////
     ComPort *com_port;
 
