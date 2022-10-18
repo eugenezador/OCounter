@@ -91,7 +91,7 @@ private:
 
     void  keyPressEvent(QKeyEvent *event);
 
-    double device_start = 0;// при старте программы в эту переменную записывается текущее unix-time
+    double lazer_start = 0;// при старте программы в эту переменную записывается текущее unix-time
 
     double min_L = 99999; // минимальное расстоние до цели (для масштабирования графика)
 

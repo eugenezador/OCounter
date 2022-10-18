@@ -29,7 +29,8 @@ Ocounter::Ocounter(QWidget *parent)
 //    connect(shared_memory, &MShare::read_data_from_shared_memory, this, &Ocounter::update_shared_memory_data, Qt::QueuedConnection);
 
 
-    device_start = QDateTime::currentDateTimeUtc().toTime_t();
+//    device_start = QDateTime::currentDateTimeUtc().toTime_t();
+
     plot_settings();
 }
 
@@ -75,7 +76,7 @@ void Ocounter::parse_received_data(const QByteArray &data)
         if (str[i] == ' ' && str.size() != 0) {
             flag = 0;
             qDebug() << "time : "<< tmp;
-            time = device_start + tmp.toDouble();
+            time = lazer_start + tmp.toDouble() * 0.001;
 //            result.push_back(tmp.toDouble());
             k =0;
 
@@ -166,14 +167,16 @@ void Ocounter::plot_settings()
 
 
     QSharedPointer<QCPAxisTickerDateTime> dateTicker(new QCPAxisTickerDateTime);
-    dateTicker->setDateTimeFormat("h:m:s");
     ui->plot->xAxis->setTicker(dateTicker);
+
+    ui->plot->xAxis->setRange(QDateTime::currentDateTimeUtc().toTime_t(), QDateTime::currentDateTimeUtc().toTime_t()  + 200 );
+    dateTicker->setDateTimeFormat("h:m:s");
 
 }
 
 void Ocounter::real_plot()
 {
-    if(lazer_on) {
+//    if(lazer_on) {
 //    if( !q_x.empty() && !q_y.empty() )
 //        {
 //            q_x.clear();
@@ -203,16 +206,16 @@ void Ocounter::real_plot()
 
     ui->plot->replot();
     ui->plot->update();
-    }
+//    }
 }
 
 void Ocounter::com_port_permission()
 {
-    QString fileName = QFileDialog::getOpenFileName(this,
-    tr("Open Script"), "/", tr("Script Files (*permission.sh)"));
+//    QString fileName = QFileDialog::getOpenFileName(this,
+//    tr("Open Script"), "/", tr("Script Files (*permission.sh)"));
 
-    if (QProcess::execute(QString("/bin/sh ") + fileName) < 0)
-        qDebug() << "Failed to run";
+//    if (QProcess::execute(QString("/bin/sh ") + fileName) < 0)
+//        qDebug() << "Failed to run";
 
 }
 
@@ -222,22 +225,27 @@ void Ocounter::on_lon_clicked()
         emit sent_data_to_com_port("$LON\r");
         lazer_on = true;
         key_pressed = false;
+        lazer_start = QDateTime::currentDateTimeUtc().toTime_t();
     }
 
 //    parse_received_data("Opt ch time255405 pnts:292.5(4383),331.4(1077),");
 
 //    result << 1 << 4 << 4 << 1;
 //    emit write_to_shared_memory(result);
+
 }
 
 
 void Ocounter::on_lof_clicked()
 {
-    if(key_pressed) {
-    emit sent_data_to_com_port("$LOF\r");
-        lazer_on = false;
-        key_pressed = false;
-    }
+//    if(key_pressed) {
+//    emit sent_data_to_com_port("$LOF\r");
+//        lazer_on = false;
+//        key_pressed = false;
+//    }
+
+    parse_received_data("Opt ch time255405 pnts:292.5(4383),331.4(1077),");
+//    real_plot();
 }
 
 void Ocounter::on_ver_clicked()
