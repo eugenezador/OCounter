@@ -103,7 +103,7 @@ private:
 
     bool lazer_on = false;
 /////////////////////
-    QByteArray data = "$PS_40250 v.07c_0420"; // при первом запуске кнопки connect контейнер data не обновляется
+    QByteArray data = ""; // при первом запуске кнопки connect контейнер data не обновляется
 /////////////////////
     ComPort *com_port;
 

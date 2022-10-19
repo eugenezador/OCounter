@@ -176,7 +176,7 @@ void Ocounter::plot_settings()
 
 void Ocounter::real_plot()
 {
-//    if(lazer_on) {
+    if(lazer_on) {
 //    if( !q_x.empty() && !q_y.empty() )
 //        {
 //            q_x.clear();
@@ -206,7 +206,7 @@ void Ocounter::real_plot()
 
     ui->plot->replot();
     ui->plot->update();
-//    }
+    }
 }
 
 void Ocounter::com_port_permission()
@@ -238,24 +238,36 @@ void Ocounter::on_lon_clicked()
 
 void Ocounter::on_lof_clicked()
 {
-//    if(key_pressed) {
-//    emit sent_data_to_com_port("$LOF\r");
-//        lazer_on = false;
-//        key_pressed = false;
-//    }
+    if(key_pressed) {
+    emit sent_data_to_com_port("$LOF\r");
+        lazer_on = false;
+        key_pressed = false;
+    }
 
-    parse_received_data("Opt ch time255405 pnts:292.5(4383),331.4(1077),");
-//    real_plot();
+//    parse_received_data("Opt ch1 time33840 pnts:none");
+//    parse_received_data("Opt ch1 time34840 pnts:1185.3(436),1489.8(26),1636.6(25),1747.8(46),1785.6(519),1802.9(78),");
+//    parse_received_data("#Opt ch1 time35840 pnts:1470.0(748),1634.2(1032),1745.1(904),1784.7(686),1802.3(108),");
+//    parse_received_data("#Opt ch1 time36839 pnts:1503.8(615),");
+//    parse_received_data("#Opt ch1 time37839 pnts:176.2(1197),225.6(1242),1191.3(34),1503.8(548),");
+//    parse_received_data("#Opt ch1 time38839 pnts:203.7(1745),1258.4(810),1329.7(155),1393.6(179),1451.1(111),1469.4(35),");
+//    parse_received_data("#Opt ch1 time39839 pnts:1193.7(94),1331.8(800),1449.6(630),1495.2(24),1512.8(26),");
+//    parse_received_data("#Opt ch1 time40839 pnts:1193.1(120),1331.2(102),1437.9(507),1451.4(402),");
+//    parse_received_data("#Opt ch1 time41839 pnts:1194.0(57),1331.2(24),1437.6(479),1450.2(183),");
+//    parse_received_data("#Opt ch1 time42839 pnts:1193.1(143),1334.2(520),1437.6(647),1451.4(407),");
+//    parse_received_data("#Opt ch1 time43839 pnts:1193.7(99),1334.2(485),1437.9(596),1451.1(363),");
+//    parse_received_data("#Opt ch1 time44839 pnts:1194.3(61),1334.5(574),1438.5(591),1451.1(301),");
+
+
 }
 
 void Ocounter::on_ver_clicked()
 {
-//    if(key_pressed) {
-//        emit sent_data_to_com_port("$VER\r");
-//        key_pressed = false;
-//    }
+    if(key_pressed) {
+        emit sent_data_to_com_port("$VER\r");
+        key_pressed = false;
+    }
 
-    emit read_from_shared_memory();
+//    emit read_from_shared_memory();
 }
 
 void Ocounter::on_vlt_clicked()
@@ -409,10 +421,7 @@ void Ocounter::on_connected_clicked()
         emit open_serial_port(ui->portName->currentText());
         emit sent_data_to_com_port("$VER\r");
 
-//        sleep(1);
-
-
-        if(data.size() != 0) {
+        if(com_port->serial->isOpen()) {
             ui->connected->setText("Disconnect");
             ui->connected->setStyleSheet("*{ background-color: rgb(255,0,0); color:  rgb(255, 255, 255)}");
 
