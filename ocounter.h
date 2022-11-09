@@ -2,9 +2,6 @@
 #define OCOUNTER_H
 
 #include <QMainWindow>
-//#include <string.h>
-
-
 #include "qcustomplot.h"
 #include "comport.h"
 #include "infowindow.h"
